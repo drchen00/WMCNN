@@ -52,10 +52,11 @@ def get_data(train_path, test_path, valid_id=0, isNorm=True, length=1024):
     valid = _slice_data(valid, length)
     test = _slice_data(test, length)
     if isNorm:
-        train = _normalize(train)
-        valid = _normalize(valid)
-        test = _normalize(test)
-    return ((train[:, 0], train[:, 1:]), (valid[:, 0], valid[:, 1:]), (test[:, 0], test[:, 1:]))
+        train[:, 1:] = _normalize(train[:, 1:])
+        valid[:, 1:] = _normalize(valid[:, 1:])
+        test[:, 1:] = _normalize(test[:, 1:])
+    return ((np.int_(train[:, 0] - 1), train[:, 1:]),
+            (np.int_(valid[:, 0] - 1), valid[:, 1:]), (np.int_(test[:, 0] - 1), test[:, 1:]))
 
 
 if __name__ == '__main__':
@@ -63,8 +64,11 @@ if __name__ == '__main__':
     train_label, train_data = data[0]
     valid_label, valid_data = data[1]
     test_label, test_data = data[2]
+    print(train_label)
     print(train_data)
     print('--------------------------------')
+    print(valid_label)
     print(valid_data)
     print('--------------------------------')
+    print(test_label)
     print(test_data)
