@@ -11,22 +11,22 @@ def _load_data(path):
     return data
 
 
-def _slice_data(data, length):
+def _slice_data(data, label, length):
     ori_num = data.shape[0]
     ori_len = data.shape[1]
-    threshold = min(ori_len - 1, length) / 2
+    threshold = min(ori_len, length) / 2
     length = 1
     while length <= threshold:
         length <<= 1
-    length += 1
     mul = ori_len - length + 1
     n = ori_num * mul
     new_data = np.zeros((n, length))
+    new_label = np.zeros((n,), dtype=np.int_)
     for i in range(ori_num):
         for j in range(mul):
-            new_data[i * mul + j, 0] = data[i, 0]
-            new_data[i * mul + j, 1:] = data[i, j + 1:j + length]
-    return new_data
+            new_data[i * mul + j, :] = data[i, j:j + length]
+            new_label[i * mul + j] = label[i]
+    return new_data, new_label
 
 
 def _normalize(data):
@@ -38,6 +38,7 @@ def _normalize(data):
 def get_data(train_path, test_path, valid_id=0, isNorm=True, length=1024):
     train = _load_data(train_path)
     test = _load_data(test_path)
+
     train_num = train.shape[0]
     if valid_id > 0:
         idn = np.arange(train_num)
@@ -48,27 +49,43 @@ def get_data(train_path, test_path, valid_id=0, isNorm=True, length=1024):
         train = train[idn]
     else:
         valid = train.copy()
-    train = _slice_data(train, length)
-    valid = _slice_data(valid, length)
-    test = _slice_data(test, length)
+
+    train_label = np.int_(train[:, 0])
+    train_data = train[:, 1:]
+
+    valid_label = np.int_(valid[:, 0])
+    valid_data = valid[:, 1:]
+
+    test_label = np.int_(test[:, 0])
+    test_data = test[:, 1:]
+
+    train_data, train_label = _slice_data(train_data, train_label, length)
+    valid_data, valid_label = _slice_data(valid_data, valid_label, length)
+    test_data, test_label = _slice_data(test_data, test_label, length)
+
     if isNorm:
-        train[:, 1:] = _normalize(train[:, 1:])
-        valid[:, 1:] = _normalize(valid[:, 1:])
-        test[:, 1:] = _normalize(test[:, 1:])
-    return ((np.int_(train[:, 0] - 1), train[:, 1:]),
-            (np.int_(valid[:, 0] - 1), valid[:, 1:]), (np.int_(test[:, 0] - 1), test[:, 1:]))
+        train_data = _normalize(train_data)
+        valid_data = _normalize(valid_data)
+        test_data = _normalize(test_data)
+
+    return ((train_label, train_data), (valid_label, valid_data), (test_label, test_data))
+
+def _dwt(data, layer):
+    lens = [data.shape[1]]
 
 
 if __name__ == '__main__':
-    data = get_data('./test_data', './test_data', valid_id=2, isNorm=True)
-    train_label, train_data = data[0]
-    valid_label, valid_data = data[1]
-    test_label, test_data = data[2]
-    print(train_label)
-    print(train_data)
-    print('--------------------------------')
-    print(valid_label)
-    print(valid_data)
-    print('--------------------------------')
-    print(test_label)
-    print(test_data)
+#      data = get_data('./test_data', './test_data', valid_id=2, isNorm=False)
+#      train_label, train_data = data[0]
+#      valid_label, valid_data = data[1]
+#      test_label, test_data = data[2]
+#      print(train_label)
+#      print(train_data)
+#      print('--------------------------------')
+#      print(valid_label)
+#      print(valid_data)
+#      print('--------------------------------')
+#      print(test_label)
+#      print(test_data)
+#      print('--------------------------------')
+#      print(_load_data('./test_data'))
