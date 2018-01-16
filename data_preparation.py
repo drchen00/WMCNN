@@ -1,5 +1,6 @@
 #!/usr/bin/python
 import numpy as np
+import pywt as pw
 
 
 def _load_data(path):
@@ -14,10 +15,9 @@ def _load_data(path):
 def _slice_data(data, label, length):
     ori_num = data.shape[0]
     ori_len = data.shape[1]
-    threshold = min(ori_len, length) / 2
-    length = 1
-    while length <= threshold:
-        length <<= 1
+    length = min(ori_len, length)
+    if length == ori_len:
+        return data, label
     mul = ori_len - length + 1
     n = ori_num * mul
     new_data = np.zeros((n, length))
@@ -68,24 +68,40 @@ def get_data(train_path, test_path, valid_id=0, isNorm=True, length=1024):
         valid_data = _normalize(valid_data)
         test_data = _normalize(test_data)
 
-    return ((train_label, train_data), (valid_label, valid_data), (test_label, test_data))
+    train_data, train_lens = _dwt(train_data)
+    valid_data, valid_lens = _dwt(valid_data)
+    test_data, test_lens = _dwt(test_data)
 
-def _dwt(data, layer):
+    return ((train_label, train_data, train_lens),
+            (valid_label, valid_data, valid_lens),
+            (test_label, test_data, test_lens))
+
+
+def _dwt(data):
     lens = [data.shape[1]]
+    w = pw.Wavelet('sym2')
+    max_level = pw.dwt_max_level(lens[0], w)
+    print(max_level)
+    new_data = data.copy()
+    for i in range(1, max_level + 1):
+        ca = pw.wavedec(data, w, level=i, axis=1)[0]
+        lens.append(ca.shape[1])
+        new_data = np.concatenate([new_data, ca], axis=1)
+    return new_data, lens
 
 
 if __name__ == '__main__':
-#      data = get_data('./test_data', './test_data', valid_id=2, isNorm=False)
-#      train_label, train_data = data[0]
-#      valid_label, valid_data = data[1]
-#      test_label, test_data = data[2]
-#      print(train_label)
-#      print(train_data)
-#      print('--------------------------------')
-#      print(valid_label)
-#      print(valid_data)
-#      print('--------------------------------')
-#      print(test_label)
-#      print(test_data)
-#      print('--------------------------------')
-#      print(_load_data('./test_data'))
+    data = get_data('./test_data', './test_data', valid_id=2, isNorm=False)
+    train_label, train_data, train_lens = data[0]
+    valid_label, valid_data, valid_lens = data[1]
+    test_label, test_data, test_lens = data[2]
+    print(train_label)
+    print(train_data)
+    print('--------------------------------')
+    print(valid_label)
+    print(valid_data)
+    print('--------------------------------')
+    print(test_label)
+    print(test_data)
+    print('--------------------------------')
+    print(_load_data('./test_data'))
