@@ -79,9 +79,8 @@ def get_data(train_path, test_path, valid_id=0, isNorm=True, length=1024):
 
 def _dwt(data):
     lens = [data.shape[1]]
-    w = pw.Wavelet('sym2')
+    w = pw.Wavelet('haar')
     max_level = pw.dwt_max_level(lens[0], w)
-    print(max_level)
     new_data = data.copy()
     for i in range(1, max_level + 1):
         ca = pw.wavedec(data, w, level=i, axis=1)[0]
@@ -91,7 +90,7 @@ def _dwt(data):
 
 
 if __name__ == '__main__':
-    data = get_data('./test_data', './test_data', valid_id=2, isNorm=False)
+    data = get_data('./test_data', './test_data', valid_id=2, isNorm=False, length=4)
     train_label, train_data, train_lens = data[0]
     valid_label, valid_data, valid_lens = data[1]
     test_label, test_data, test_lens = data[2]
