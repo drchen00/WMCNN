@@ -1,8 +1,7 @@
 #!/usr/bin/python3
 
-import tensorflow as tf
-import pywt
 import shutil
+import tensorflow as tf
 from data_pre import get_data
 from model import Net
 from data_set import data_set_dict
@@ -22,6 +21,7 @@ tf.flags.DEFINE_float('learning_rate', 0.001, 'learning rate')
 tf.flags.DEFINE_float('leakiness', 0.0, 'leakiness')
 tf.flags.DEFINE_string('wavelet', 'db1', 'choose wavelet')
 tf.flags.DEFINE_integer('max_steps', 20000, 'max training steps')
+tf.flags.DEFINE_integer('max_level', 2, 'max dwt times')
 
 
 def main(_):
@@ -40,7 +40,8 @@ def main(_):
     hps = {
         'learning_rate': FLAGS.learning_rate,
         'leakiness': FLAGS.leakiness,
-        'wavelet': pywt.Wavelet(FLAGS.wavelet)
+        'wavelet': FLAGS.wavelet,
+        'max_level': FLAGS.max_level
     }
 
     estimator = tf.estimator.Estimator(model.model_fn, model_url, params=hps)
@@ -57,6 +58,7 @@ def main(_):
         lambda: get_data(eval_set, data_set.length, data_set.classes_num, False, FLAGS.slice_len, data_set.test_size),  #pylint: disable=line-too-long
         steps=1)
 
+    result['error'] = 1 - result['accuracy']
     print(result)
 
 

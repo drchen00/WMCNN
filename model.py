@@ -1,7 +1,6 @@
-#!/usr/bin/python3
-
 import tensorflow as tf
 import numpy as np
+import pywt
 
 
 class Net:
@@ -13,6 +12,7 @@ class Net:
 
     def model_fn(self, mode, features, labels, params):
         self.__hps = params
+        print(params)
         self.training = True if mode == tf.estimator.ModeKeys.TRAIN else False
         logits = self.__fn(features, labels.get_shape()[1])
         predictions = {
@@ -44,7 +44,7 @@ class Net:
                     tf.argmax(labels, 1), predictions['classes'])
             })
 
-#  残差组
+        #  残差组
 
     def __residual_stack(self, x, n, out_channels, stride, bottleneck):
         for i in range(n):
@@ -118,13 +118,18 @@ class Net:
         #  全局平均，是否换成全连接？
         return tf.reduce_mean(x, 1)
 
-        #  return tf.layers.dense(x, classes_num)
-
     def __fn(self, x, classes_num):
         x_list = [x]
+        data_len = x.get_shape()[1]
         if self.__mode == 'dwt':
-            for _ in range(self.__hps['dwt_times']):
-                x = Net.__dwt(x, self.__hps['wavelet'])
+            wavelet = pywt.Wavelet(self.__hps['wavelet'])
+            max_level = min(
+                pywt.dwt_max_level(data_len, wavelet), self.__hps['max_level'])
+            #  c = lambda i, x, x_list: i < max_level
+            #  b = lambda i, x, x_list: [i+1, Net.__dwt(x, wavelet), x_list.append(x)]
+            #  _, x_list = tf.while_loop(c, b, [0, x, x_list])
+            for _ in range(max_level - 1):
+                x = Net.__dwt(x, wavelet)
                 x_list.append(x)
         y_list = []
         for o in x_list:
