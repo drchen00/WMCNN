@@ -1,12 +1,14 @@
 #!/usr/bin/python3
 
 import tensorflow as tf
+import numpy as np
 
 
 class Net:
-    def __init__(self):
+    def __init__(self, mode):
         self.__hps = None
         self.training = None
+        self.__mode = mode
         return
 
     def model_fn(self, mode, features, labels, params):
@@ -51,7 +53,6 @@ class Net:
             x = self.__residual_block(x, out_channels, stride, bottleneck)
         return x
 
-
 #  残差单元
 
     def __residual_block(self, x, out_channels, stride, bottleneck):
@@ -87,7 +88,20 @@ class Net:
 
         return tf.nn.leaky_relu(x + origin_x, self.__hps['leakiness'])
 
-    def __fn(self, x, classes_num):
+
+#  离散小波变换
+
+    @staticmethod
+    def __dwt(x, wavelet):
+        filters = wavelet.dec_lo[::-1]
+        filters = np.array(filters, 'float32').reshape([wavelet.dec_len, 1, 1])
+        channels = x.get_shape()[-1]
+        splits = tf.split(x, channels, -1)
+        for i in range(channels):
+            splits[i] = tf.nn.conv1d(splits[i], filters, 2, 'SAME')
+        return tf.concat(splits, -1)
+
+    def __resnet(self, x):
         #  初始特征提取并激活
         x = tf.layers.conv1d(x, 64, 7, padding='same', strides=2)
         x = tf.layers.batch_normalization(x, training=self.training)
@@ -102,6 +116,18 @@ class Net:
 
         x = self.__residual_stack(x, 3, 512, 2, True)
         #  全局平均，是否换成全连接？
-        x = tf.reduce_mean(x, 1)
+        return tf.reduce_mean(x, 1)
 
-        return tf.layers.dense(x, classes_num)
+        #  return tf.layers.dense(x, classes_num)
+
+    def __fn(self, x, classes_num):
+        x_list = [x]
+        if self.__mode == 'dwt':
+            for _ in range(self.__hps['dwt_times']):
+                x = Net.__dwt(x, self.__hps['wavelet'])
+                x_list.append(x)
+        y_list = []
+        for o in x_list:
+            y_list.append(self.__resnet(o))
+        y = tf.concat(y_list, 1)
+        return tf.layers.dense(y, classes_num)
