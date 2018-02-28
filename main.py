@@ -20,7 +20,7 @@ tf.flags.DEFINE_bool('retrain', False, 'force to train or not')
 tf.flags.DEFINE_float('learning_rate', 0.001, 'learning rate')
 tf.flags.DEFINE_float('leakiness', 0.0, 'leakiness')
 tf.flags.DEFINE_string('wavelet', 'db1', 'choose wavelet')
-tf.flags.DEFINE_integer('max_steps', 20000, 'max training steps')
+tf.flags.DEFINE_integer('max_steps', 4000, 'max training steps')
 tf.flags.DEFINE_integer('max_level', 2, 'max dwt times')
 
 
