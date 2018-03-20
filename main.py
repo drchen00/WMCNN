@@ -20,7 +20,7 @@ tf.flags.DEFINE_bool('retrain', False, 'force to train or not')
 tf.flags.DEFINE_float('learning_rate', 0.001, 'learning rate')
 tf.flags.DEFINE_float('leakiness', 0.0, 'leakiness')
 tf.flags.DEFINE_string('wavelet', 'db1', 'choose wavelet')
-tf.flags.DEFINE_integer('max_steps', 4000, 'max training steps')
+tf.flags.DEFINE_integer('steps', 1000, 'max training steps')
 tf.flags.DEFINE_integer('max_level', 2, 'max dwt times')
 
 
@@ -43,6 +43,7 @@ def main(_):
         'wavelet': FLAGS.wavelet,
         'max_level': FLAGS.max_level
     }
+    print(hps)
 
     estimator = tf.estimator.Estimator(model.model_fn, model_url, params=hps)
 
@@ -52,7 +53,7 @@ def main(_):
     estimator.train(
         lambda: get_data(train_set, data_set.length, data_set.classes_num, True, FLAGS.slice_len, FLAGS.batch_size),  #pylint: disable=line-too-long
         [logging_hook],
-        max_steps=FLAGS.max_steps)
+        steps=FLAGS.steps)
 
     result = estimator.evaluate(
         lambda: get_data(eval_set, data_set.length, data_set.classes_num, False, FLAGS.slice_len, data_set.test_size),  #pylint: disable=line-too-long
