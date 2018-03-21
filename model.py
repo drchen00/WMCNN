@@ -27,7 +27,7 @@ class Net:
 
         if mode == tf.estimator.ModeKeys.TRAIN:
             #  对于大量数据请修改优化器加速收敛
-            optimizer = tf.train.GradientDescentOptimizer(
+            optimizer = tf.train.AdagradOptimizer(
                 self.__hps['learning_rate'])
             update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
             with tf.control_dependencies(update_ops):

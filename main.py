@@ -10,7 +10,7 @@ tf.logging.set_verbosity(tf.logging.INFO)
 
 FLAGS = tf.flags.FLAGS
 
-tf.flags.DEFINE_string('prefix', '/home/drc/Documents/UCR_TS_Archive_2015/',
+tf.flags.DEFINE_string('prefix', '/home/iot102/Documents/UCR_TS_Archive_2015/',
                        'data set url prefix')
 tf.flags.DEFINE_string('mode', 'cnn', 'cnn or dwt')
 tf.flags.DEFINE_string('data_set', 'Adiac', 'data set name')
@@ -48,7 +48,7 @@ def main(_):
     estimator = tf.estimator.Estimator(model.model_fn, model_url, params=hps)
 
     tensors_to_log = {'probabilities': 'softmax'}
-    logging_hook = tf.train.LoggingTensorHook(tensors_to_log, 100, at_end=True)
+    logging_hook = tf.train.LoggingTensorHook({}, 100, at_end=True)
 
     estimator.train(
         lambda: get_data(train_set, data_set.length, data_set.classes_num, True, FLAGS.slice_len, FLAGS.batch_size),  #pylint: disable=line-too-long
