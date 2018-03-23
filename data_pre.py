@@ -19,6 +19,7 @@ def get_data(filenames,
     #      数据切片
     channel = 1 if slice_len == 0 or slice_len > data_len else data_len - slice_len + 1
     real_len = data_len if slice_len == 0 else min(data_len, slice_len)
+    #  tensorflow的one_hot函数是从0开始计算，UCR数据集类别从1开始，需要减1
     label = data[0] - 1
     series = []
     for i in range(1, 1 + channel):
