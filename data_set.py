@@ -9,5 +9,16 @@ Beef = Data_set(
     name='Beef', classes_num=5, train_size=30, test_size=30, length=470)
 CBF = Data_set(
     name='CBF', classes_num=3, train_size=30, test_size=900, length=128)
+SyntheticControl = Data_set(
+    name='SyntheticControl',
+    classes_num=6,
+    train_size=300,
+    test_size=300,
+    length=60)
 
-data_set_dict = {'Adiac': Adiac, 'Beef': Beef, 'CBF': CBF}
+data_set_dict = {
+    'Adiac': Adiac,
+    'Beef': Beef,
+    'CBF': CBF,
+    'synthetic_control': SyntheticControl
+}

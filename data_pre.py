@@ -28,18 +28,26 @@ def get_data(filenames,
     series = tf.transpose(series)
 
     #  对于大数据集可以使用多线程输入具体请查询API
+    #  if shuffled:
+    #  queue = tf.RandomShuffleQueue(16 * batch_size, 4 * batch_size,
+    #  [tf.int32, tf.float32],
+    #  [[1], [real_len, channel]])
+    #  else:
+    #  queue = tf.FIFOQueue(16 * batch_size, [tf.int32, tf.float32],
+    #  [[1], [real_len, channel]])
+
+    #  enqueue = queue.enqueue([[label], series])
+    #  tf.train.add_queue_runner(tf.train.QueueRunner(queue, [enqueue]))
+
+    #  labels, datas = queue.dequeue_many(batch_size)
+
     if shuffled:
-        queue = tf.RandomShuffleQueue(16 * batch_size, 4 * batch_size,
-                                      [tf.int32, tf.float32],
-                                      [[1], [real_len, channel]])
+        labels, datas = tf.train.shuffle_batch([label, series], batch_size,
+                                               16 * batch_size, 4 * batch_size)
     else:
-        queue = tf.FIFOQueue(16 * batch_size, [tf.int32, tf.float32],
-                             [[1], [real_len, channel]])
-
-    enqueue = queue.enqueue([[label], series])
-    tf.train.add_queue_runner(tf.train.QueueRunner(queue, [enqueue]))
-
-    labels, datas = queue.dequeue_many(batch_size)
+        labels, datas = tf.train.batch(
+            [label, series], batch_size, capacity=batch_size)
+        
     labels = tf.one_hot(tf.reshape(labels, [-1]), class_num)
 
     assert len(datas.get_shape()) == 3
