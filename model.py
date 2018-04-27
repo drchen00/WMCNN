@@ -4,10 +4,9 @@ import pywt
 
 
 class Net:
-    def __init__(self, mode):
+    def __init__(self):
         self.__hps = None
         self.training = None
-        self.__mode = mode
         self.__regularizer = None
         self.__initializer = tf.contrib.layers.xavier_initializer()
         return
@@ -142,19 +141,7 @@ class Net:
         return tf.concat(splits, -1)
 
     def __resnet(self, x):
-        #  初始特征提取并激活
-        x = tf.layers.conv1d(
-            x,
-            64,
-            7,
-            padding='same',
-            strides=2,
-            kernel_regularizer=self.__regularizer,
-            kernel_initializer=self.__initializer)
-        x = tf.layers.batch_normalization(x, training=self.training)
-        x = tf.nn.leaky_relu(x, self.__hps['leakiness'])
         #  残差特征提取
-        x = tf.layers.max_pooling1d(x, 3, 2, padding='same')
         x = self.__residual_stack(x, 2, 64, 1, False)
 
         x = self.__residual_stack(x, 2, 128, 2, False)
@@ -166,37 +153,27 @@ class Net:
         return tf.reduce_mean(x, 1)
 
     def __fn(self, x, classes_num):
+        wavelet = pywt.Wavelet(self.__hps['wavelet'])
+
         x_list = [x]
-        #  y = self.__resnet(x)
-        batch_size = x.get_shape()[0]
-        data_len = x.get_shape()[1]
-        channels = x.get_shape()[-1]
-        if self.__mode == 'dwt':
-            wavelet = pywt.Wavelet(self.__hps['wavelet'])
-            max_level = min(
-                pywt.dwt_max_level(data_len, wavelet), self.__hps['max_level'])
-
-            #  def cond(i, a, b):  #pylint: disable=unused-argument
-            #  return i < max_level
-
-            #  def body(i, a, b):
-            #  a = Net.__dwt(a, wavelet)
-            #  b = tf.add(b, self.__resnet(a))
-            #  return i + 1, a, b
-
-            #  i0 = tf.constant(0)
-            #  _, _, y = tf.while_loop(cond, body, [i0, x, y], [
-            #  i0.get_shape(),
-            #  tf.TensorShape([batch_size, None, channels]),
-            #  y.get_shape()
-            #  ])
-
-            for _ in range(max_level):
-                x = Net.__dwt(x, wavelet)
-                x_list.append(x)
+        for _ in range(self.__hps['max_level']):
+            x = Net.__dwt(x, wavelet)
+            x_list.append(x)
         y_list = []
         for o in x_list:
-            y_list.append(self.__resnet(o))
+            o = tf.layers.conv1d(
+                o,
+                64,
+                wavelet.dec_len - 1,
+                padding='same',
+                strides=2,
+                kernel_regularizer=self.__regularizer,
+                kernel_initializer=self.__initializer)
+            o = tf.layers.batch_normalization(o, training=self.training)
+            o = tf.nn.leaky_relu(o, self.__hps['leakiness'])
+            o = tf.layers.max_pooling1d(o, 3, 2, padding='same')
+            y_list.append(o)
         y = tf.concat(y_list, 1)
+        y = self.__resnet(y)
         y = tf.layers.dropout(y, training=self.training)
         return tf.layers.dense(y, classes_num)

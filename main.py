@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 
 import shutil
+import pywt
 import tensorflow as tf
 from data_pre import get_data
 from model import Net
@@ -12,16 +13,15 @@ FLAGS = tf.flags.FLAGS
 
 tf.flags.DEFINE_string('prefix', '/home/iot102/Documents/UCR_TS_Archive_2015/',
                        'data set url prefix')
-tf.flags.DEFINE_string('mode', 'cnn', 'cnn or dwt')
-tf.flags.DEFINE_string('data_set', 'Adiac', 'data set name')
+tf.flags.DEFINE_string('data_set', 'CinC_ECG_torso', 'data set name')
 tf.flags.DEFINE_integer('slice_len', 0, 'data length after slice')
 tf.flags.DEFINE_integer('batch_size', 256, 'batch size')
 tf.flags.DEFINE_bool('retrain', False, 'force to train or not')
 tf.flags.DEFINE_float('reg_rate', 0.0, 'regularization rate')
 tf.flags.DEFINE_float('leakiness', 0.1, 'leakiness')
-tf.flags.DEFINE_string('wavelet', 'db1', 'choose wavelet')
+tf.flags.DEFINE_string('wavelet', 'db4', 'choose wavelet')
 tf.flags.DEFINE_integer('steps', 1000, 'max training steps')
-tf.flags.DEFINE_integer('max_level', 6, 'max dwt times')
+tf.flags.DEFINE_integer('max_level', 0, 'max dwt times')
 
 
 def main(_):
@@ -29,18 +29,22 @@ def main(_):
         FLAGS.prefix + FLAGS.data_set + '/' + FLAGS.data_set + '_TRAIN'
     ]
     eval_set = [FLAGS.prefix + FLAGS.data_set + '/' + FLAGS.data_set + '_TEST']
-    model_url = './model/' + FLAGS.mode + '/' + FLAGS.data_set
     data_set = data_set_dict[FLAGS.data_set]
+    wavelet = pywt.Wavelet(FLAGS.wavelet)
+    max_level = min(FLAGS.max_level,
+                    pywt.dwt_max_level(data_set.length, wavelet) - 2)
+    max_level = max(0, max_level)
+    model_url = './model/' + FLAGS.data_set + '/' + str(max_level)
 
     if FLAGS.retrain:
         shutil.rmtree(model_url)
 
-    model = Net(FLAGS.mode)
+    model = Net()
 
     hps = {
         'leakiness': FLAGS.leakiness,
         'wavelet': FLAGS.wavelet,
-        'max_level': FLAGS.max_level,
+        'max_level': max_level,
         'reg_rate': FLAGS.reg_rate
     }
     print(hps)
