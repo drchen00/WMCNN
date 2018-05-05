@@ -175,5 +175,5 @@ class Net:
             y_list.append(o)
         y = tf.concat(y_list, 1)
         y = self.__resnet(y)
-        y = tf.layers.dropout(y, training=self.training)
+        #  y = tf.layers.dropout(y, training=self.training)
         return tf.layers.dense(y, classes_num)

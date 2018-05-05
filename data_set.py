@@ -52,6 +52,56 @@ Cricket_Z = Data_set(
     test_size=390,
     length=300)
 
+DiatomSizeReduction = Data_set(
+    name='CDiatomSizeReduction',
+    classes_num=4,
+    train_size=16,
+    test_size=306,
+    length=345)
+
+ECGFiveDays = Data_set(
+    name='ECGFiveDays',
+    classes_num=2,
+    train_size=23,
+    test_size=861,
+    length=136)
+
+FaceAll = Data_set(
+    name='FaceAll', classes_num=14, train_size=560, test_size=1690, length=131)
+
+FaceFour = Data_set(
+    name='FaceFour', classes_num=4, train_size=24, test_size=88, length=350)
+
+FacesUCR = Data_set(
+    name='FacesUCR',
+    classes_num=14,
+    train_size=200,
+    test_size=2050,
+    length=131)
+
+fiftywords = Data_set(
+    name='fiftywords',
+    classes_num=50,
+    train_size=450,
+    test_size=455,
+    length=270)
+
+FISH = Data_set(
+    name='FISH', classes_num=7, train_size=175, test_size=175, length=463)
+
+Haptics = Data_set(
+    name='Haptics', classes_num=5, train_size=155, test_size=308, length=1092)
+
+InlineSkate = Data_set(
+    name='InlineSkate',
+    classes_num=7,
+    train_size=100,
+    test_size=550,
+    length=1882)
+
+Lighting7 = Data_set(
+    name='Lighting7', classes_num=7, train_size=70, test_size=73, length=319)
+
 data_set_dict = {
     'Adiac': Adiac,
     'Beef': Beef,
@@ -63,4 +113,14 @@ data_set_dict = {
     'Cricket_X': Cricket_X,
     'Cricket_Y': Cricket_Y,
     'Cricket_Z': Cricket_Z,
+    'DiatomSizeReduction': DiatomSizeReduction,
+    'ECGFiveDays': ECGFiveDays,
+    'FaceAll': FaceAll,
+    'FaceFour': FaceFour,
+    'FacesUCR': FacesUCR,
+    '50words': fiftywords,
+    'FISH': FISH,
+    'Haptics': Haptics,
+    'InlineSkate': InlineSkate,
+    'Lighting7': Lighting7,
 }

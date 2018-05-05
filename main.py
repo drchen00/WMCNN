@@ -22,6 +22,7 @@ tf.flags.DEFINE_float('leakiness', 0.1, 'leakiness')
 tf.flags.DEFINE_string('wavelet', 'db4', 'choose wavelet')
 tf.flags.DEFINE_integer('steps', 1000, 'max training steps')
 tf.flags.DEFINE_integer('max_level', 0, 'max dwt times')
+tf.flags.DEFINE_string('path', '', 'model save path')
 
 
 def main(_):
@@ -34,7 +35,11 @@ def main(_):
     max_level = min(FLAGS.max_level,
                     pywt.dwt_max_level(data_set.length, wavelet) - 2)
     max_level = max(0, max_level)
-    model_url = './model/' + FLAGS.data_set + '/' + str(max_level)
+    if FLAGS.path == '':
+        model_url = './model/' + FLAGS.data_set + '/' + str(max_level)
+    else:
+        model_url = './model/' + FLAGS.data_set + '/' + str(max_level) + str(
+            "_") + str(FLAGS.path)
 
     if FLAGS.retrain:
         shutil.rmtree(model_url)
